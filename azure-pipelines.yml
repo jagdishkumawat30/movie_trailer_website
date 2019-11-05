@@ -1,0 +1,78 @@
+# Starter pipeline
+- task: AzureAppServiceManage@0
+  inputs:
+    azureSubscription: 'Free Trial(bdb36cab-f416-4fe9-85cc-1615168cb4ff)'
+    Action: 'Stop Azure App Service'
+    WebAppName: 'mybotwebapp001'
+- task: Npm@1
+  inputs:
+    command: 'install'
+    workingDir: 'AngularProjectFolder'
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    workingDir: 'AngularProjectFolder'
+    customCommand: 'run build-prod'
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '3.0.100'
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+    feedsToUse: 'select'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration release --no-restore'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*.csproj'
+    publishTestResults: false
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+    arguments: '--configuration release --output $(build.artifactstagingdirectory)'
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Free Trial(bdb36cab-f416-4fe9-85cc-1615168cb4ff)'
+    appType: 'webApp'
+    WebAppName: 'mybotwebapp001'
+    packageForLinux: '$(build.artifactstagingdirectory)/**/*/.zip'
+- task: AzureAppServiceManage@0
+  inputs:
+    azureSubscription: 'Free Trial(bdb36cab-f416-4fe9-85cc-1615168cb4ff)'
+    Action: 'Start Azure App Service'
+    WebAppName: 'mybotwebapp001'
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
